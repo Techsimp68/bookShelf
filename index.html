@@ -8,37 +8,99 @@
     body {
       margin: 0;
       font-family: 'Georgia', serif;
-      background-color: #f8f5f0;
+      background-color: #f4f1ea;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      justify-content: space-between;
+    }
+
+    .top-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      background-color: #bcd0e6;
+    }
+
+    .window {
+      width: 120px;
+      height: 120px;
+      background-color: #add8e6;
+      border: 3px solid #fff;
+      border-radius: 8px;
+      background-image: url('scenes/day.png'); /* dynamically changed */
+      background-size: cover;
+      box-shadow: 0 0 8px rgba(0,0,0,0.3);
+    }
+
+    .clock {
+      font-size: 28px;
+      font-weight: bold;
     }
 
     .bookshelf {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      align-items: center;
+      align-items: flex-end;
       padding: 40px;
-      background-color:#F5F5DC;
-      background-size: cover;
-      min-height: 100vh;
+      background-color: #3b2a1a;
+      background-image: 
+        linear-gradient(45deg, rgba(255,255,255,0.02) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(255,255,255,0.02) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.02) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.02) 75%);
+      background-size: 40px 40px;
+      box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.4);
     }
 
     .book {
-      width: 120px;
+      width: 60px;
       height: 180px;
-      background-color: #8B4513;
-      margin: 20px;
-      border-radius: 6px;
-      box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+      margin: 10px;
+      border-radius: 4px;
       cursor: pointer;
-      color: white;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      text-align: center;
+      font-family: 'Garamond', serif;
+      font-size: 13px;
+      font-weight: bold;
+      color: #fdf1c2;
+      text-shadow: 1px 1px 2px #000;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-weight: bold;
-      text-align: center;
       padding: 10px;
-      writing-mode: vertical-rl;
-      text-orientation: mixed;
+      position: relative;
+      overflow: hidden;
+
+      background: radial-gradient(circle at 20% 30%, #6a3a1d, #3c1f0f 70%);
+      background-blend-mode: overlay;
+      box-shadow:
+        inset 0 0 2px rgba(255, 255, 255, 0.1),
+        inset 0 0 10px rgba(0, 0, 0, 0.3),
+        2px 2px 6px rgba(0, 0, 0, 0.4);
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-color: #4e2e1a;
+    }
+
+    .book::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.02),
+        rgba(255, 255, 255, 0.02) 1px,
+        transparent 1px,
+        transparent 2px
+      );
+      pointer-events: none;
+      mix-blend-mode: overlay;
+      opacity: 0.3;
     }
 
     #reader {
@@ -46,8 +108,8 @@
       padding: 20px;
       max-width: 800px;
       margin: auto;
-      background: white;
-      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      background: #fff;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
       border-radius: 8px;
       position: relative;
     }
@@ -72,7 +134,7 @@
     #closeBtn {
       margin-top: 20px;
       padding: 10px 20px;
-      background-color: #8B0000;
+      background-color: #5a2d0c;
       color: white;
       border: none;
       border-radius: 4px;
@@ -81,6 +143,12 @@
   </style>
 </head>
 <body>
+  <div class="top-section">
+    <div class="clock" id="clock">--:--:--</div>
+    <p id="clockMessage" style="margin: 0; font-size: 16px;"></p>
+    <div class="window" id="sceneWindow"></div>
+  </div>
+
   <div class="bookshelf" id="bookshelf">
     <div class="book" onclick="openBook('OvergrownCityPrologue')">Overgrown City Prologue</div>
     <div class="book" onclick="openBook('TheStarWandererPrologue')">The Star Wanderer Prologue</div>
@@ -96,15 +164,18 @@
     <button id="closeBtn" onclick="closeBook()">Close Book</button>
   </div>
 
+  <div id="root"></div>
+<script type="module" src="main.jsx"></script>
+
   <script>
     function openBook(name) {
       document.getElementById("bookshelf").style.display = "none";
       document.getElementById("reader").style.display = "block";
 
       document.getElementById("title").innerText = name.replace(/([A-Z])/g, ' $1').trim();
-      document.getElementById("audio").src = `audio/${name}.mp3`;
+      document.getElementById("audio").src = `backend/python/audio/${name}.mp3`;
 
-      fetch(`books/${name}.txt`)
+      fetch(`backend/python/books/${name}.txt`)
         .then(res => res.text())
         .then(text => {
           document.getElementById("text").textContent = text;
@@ -116,6 +187,26 @@
       document.getElementById("bookshelf").style.display = "flex";
       document.getElementById("audio").pause();
     }
+
+    async function updateClockAndScene() {
+      try {
+        const res = await fetch("http://127.0.0.1:5000/time");
+        const data = await res.json();
+        document.getElementById("clock").innerText = data.time;
+        document.getElementById("clockMessage").innerText = data.message;
+
+        const scene = document.getElementById("sceneWindow");
+        scene.style.backgroundImage = data.is_daytime
+          ? "url('scenes/day.png')"
+          : "url('scenes/night.png')";
+
+      } catch (e) {
+        console.error("Failed to fetch time", e);
+      }
+    }
+
+    setInterval(updateClockAndScene, 60000);
+    updateClockAndScene();
   </script>
 </body>
 </html>

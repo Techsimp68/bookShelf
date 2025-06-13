@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Choose Your Story Mode</title>
+  <style>
+    body {
+      background-color: #1e1e1e;
+      color: #f0f0f0;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+    }
+    .mode-button {
+      background-color: #444;
+      color: #fff;
+      border: none;
+      padding: 1rem 2rem;
+      margin: 0.5rem;
+      font-size: 1.2rem;
+      cursor: pointer;
+      border-radius: 10px;
+      transition: background-color 0.3s;
+    }
+    .mode-button:hover {
+      background-color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>Choose Your Story Mode</h1>
+  <button class="mode-button" onclick="selectMode('classic')">📖 Classic Mode</button>
+  <button class="mode-button" onclick="selectMode('dynamic')">🔀 Dynamic Mode</button>
+
+  <script>
+    // Save the mode to localStorage and redirect to book.html
+    function selectMode(mode) {
+      localStorage.setItem('storyMode', mode);
+      window.location.href = 'book.html'; // Continue to the story
+    }
+  </script>
+</body>
+</html>
